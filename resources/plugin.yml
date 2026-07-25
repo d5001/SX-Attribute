@@ -1,0 +1,24 @@
+name: SX-Attribute
+main: github.saukiya.sxattribute.SXAttribute
+version: ${project.version}
+author: Stone
+description: "这是由 石头 魔改的SX-Attribute"
+softdepend:
+- HolographicDisplays
+- PlaceholderAPI
+- RPGInventory
+- MythicMobs
+- SX-Level
+- SkillAPI
+- Vault
+
+commands:
+   sxattribute:
+      usage: error! please reload this plugin
+      aliases:
+      - sx
+permissions:
+  sx-attribute.use:
+    default: true
+  sx-attribute.stats:
+    default: true
