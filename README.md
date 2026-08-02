@@ -12,7 +12,11 @@
 <a href="#development">开发文档</a>&nbsp;&nbsp;
 <a href="#license">开源条款</a>
 </h5>
-  <h5 align="center">该版本已过时 (Version 2.0.2)</h5>
+  <h5 align="center">该版本为魔改版本 (Version 2.0.4)</h5>
+  <p align="center">
+    <b>作者：石头</b> &nbsp;|&nbsp; QQ：1098579051<br>
+    ①群：362221212 &nbsp;|&nbsp; ②群：263996892
+  </p>
   <br>
   <br>
   <br>
