@@ -15,7 +15,9 @@
   <h5 align="center">该版本为魔改版本 (Version 2.0.4)</h5>
   <p align="center">
     <b>作者：石头</b> &nbsp;|&nbsp; QQ：1098579051<br>
-    ①群：362221212 &nbsp;|&nbsp; ②群：263996892
+    ①群：362221212 &nbsp;|&nbsp; ②群：263996892<br>
+基于 Saukiya 的 SX-Attribute 2.x 修改<br>
+https://github.com/Saukiya/SX-Attribute/tree/2.x
   </p>
   <br>
   <br>
