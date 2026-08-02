@@ -13,7 +13,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -29,7 +31,7 @@ public class ReloadCommand extends SubCommand {
 
     @Override
     public void onCommand(SXAttribute plugin, CommandSender sender, String[] args) {
-        Long oldTimes = System.currentTimeMillis();
+        long oldTimes = System.currentTimeMillis();
         try {
             Config.loadConfig();
             Message.loadMessage();
@@ -56,7 +58,7 @@ public class ReloadCommand extends SubCommand {
         }.runTaskAsynchronously(plugin);
         int size = 0;
         if (SXAttribute.getVersionSplit()[1] >= 11) {
-            for (UUID uuid : plugin.getAttributeManager().getEquipmentMap().keySet()) {
+            for (UUID uuid : new HashSet<>(plugin.getAttributeManager().getEquipmentMap().keySet())) {
                 Entity entity = Bukkit.getEntity(uuid);
                 if (entity == null) {
                     plugin.getAttributeManager().clearEntityData(uuid);
@@ -64,15 +66,18 @@ public class ReloadCommand extends SubCommand {
                 }
             }
         } else {
+            Set<UUID> uuids = new HashSet<>();
             for (World world : Bukkit.getWorlds()) {
                 for (Entity entity : world.getEntities()) {
-                    for (UUID uuid : plugin.getAttributeManager().getEquipmentMap().keySet()) {
-                        if (entity == null) {
-                            plugin.getAttributeManager().clearEntityData(uuid);
-                            size++;
-                        }
-                    }
+                    uuids.add(entity.getUniqueId());
                 }
+            }
+
+            HashSet<UUID> set = new HashSet<>(plugin.getAttributeManager().getEquipmentMap().keySet());
+            set.removeAll(uuids);
+            for (UUID uuid : set) {
+                plugin.getAttributeManager().clearEntityData(uuid);
+                size++;
             }
         }
         if (size > 0) {

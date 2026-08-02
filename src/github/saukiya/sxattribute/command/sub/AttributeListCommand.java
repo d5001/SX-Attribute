@@ -50,7 +50,7 @@ public class AttributeListCommand extends SubCommand {
                     }
                     list.add("&bValue: " + entry.getValue().getValue());
                     TextComponent tc = Message.getTextComponent(message, null, list);
-                    if (entry.getValue().introduction().size() > 0) {
+                    if (!entry.getValue().introduction().isEmpty()) {
                         tc.addExtra(Message.getTextComponent("§7 - §8[§cIntroduction§8]", null, entry.getValue().introduction()));
                     }
                     ((Player) sender).spigot().sendMessage(tc);
@@ -61,7 +61,7 @@ public class AttributeListCommand extends SubCommand {
                 filterSize++;
             }
         }
-        if (search.length() > 0) {
+        if (!search.isEmpty()) {
             sender.sendMessage("§7> Filter§c " + filterSize + " §7Conditions");
         }
     }

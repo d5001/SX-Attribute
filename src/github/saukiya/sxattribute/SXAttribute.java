@@ -11,6 +11,7 @@ import github.saukiya.sxattribute.data.attribute.SXAttributeData;
 import github.saukiya.sxattribute.data.attribute.SXAttributeManager;
 import github.saukiya.sxattribute.data.condition.SXConditionManager;
 import github.saukiya.sxattribute.listener.*;
+import github.saukiya.sxattribute.nms.v1_12_R1.NMSItemUtil;
 import github.saukiya.sxattribute.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -120,7 +121,7 @@ public class SXAttribute extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
-            saveResource("修复问题列表.md", true);
+            saveResource("更新内容列表.md", true);
         } catch (Throwable ignored) {
 
         }
@@ -133,7 +134,7 @@ public class SXAttribute extends JavaPlugin {
         IntStream.range(0, strSplit.length).forEachOrdered(i -> versionSplit[i] = Integer.valueOf(strSplit[i]));
         new Metrics(this);
         try {
-            itemUtil = new ItemUtil(this);
+            itemUtil = SXAttribute.getVersionSplit()[1] == 12 ? new NMSItemUtil(this) : new ItemUtil(this);
             randomStringManager = new RandomStringManager(this);
             itemDataManager = new ItemDataManager(this);
         } catch (IOException | InvalidConfigurationException e) {
@@ -226,6 +227,9 @@ public class SXAttribute extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage("§c ___/ /   |   /_____/  / ___ / /_/ /_/ /  / / /_/ / /_/ / /_/  __/");
         Bukkit.getConsoleSender().sendMessage("§c/____/_/|_|           /_/  |_\\__/\\__/_/  /_/_.___/\\__,_/\\__/\\___/");
         Bukkit.getConsoleSender().sendMessage("§c");
+        Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "§cSX-Attribute - 魔改版 - Ver" + getDescription().getVersion());
+        Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "§c作者: 石头 QQ: 1098579051");
+        Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "§c交流群: 362221212 | 263996892");
     }
 
     @Override
@@ -233,13 +237,13 @@ public class SXAttribute extends JavaPlugin {
         attributeManager.onAttributeDisable();
         conditionManager.onConditionDisable();
         mainCommand.onCommandDisable();
-        if (SXAttribute.isHolographic() && onDamageListener.getHologramsList().size() > 0) {
+        if (SXAttribute.isHolographic() && !onDamageListener.getHologramsList().isEmpty()) {
             onDamageListener.getHologramsList().forEach(Hologram::delete);
         }
-        if (Config.isHealthBossBar() && onHealthChangeDisplayListener.getBossList().size() > 0) {
+        if (Config.isHealthBossBar()) {
             onHealthChangeDisplayListener.getBossList().forEach((bossBarData -> bossBarData.getBossBar().removeAll()));
         }
-        if (Config.isHealthNameVisible() && onHealthChangeDisplayListener.getNameList().size() > 0) {
+        if (Config.isHealthNameVisible()    ) {
             onHealthChangeDisplayListener.getNameList().forEach((nameData) -> {
                 if (nameData.getEntity() != null && !nameData.getEntity().isDead()) {
                     nameData.getEntity().setCustomName(nameData.getName());

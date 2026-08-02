@@ -20,7 +20,7 @@ public class LimitLevelCondition extends SubCondition {
 
     @Override
     public SXConditionReturnType determine(LivingEntity entity, ItemStack item, String lore) {
-        if (lore.contains(Config.getConfig().getString(Config.NAME_LIMIT_LEVEL)) && Integer.valueOf(getNumber(lore)) > getLevel(entity)) {
+        if (lore.contains(Config.getConfig().getString(Config.NAME_LIMIT_LEVEL)) && Integer.parseInt(getNumber(lore)) > getLevel(entity)) {
             if (item != null) Message.send(entity, Message.PLAYER__NO_LEVEL_USE, getItemName(item));
             return SXConditionReturnType.ITEM;
         }

@@ -10,10 +10,7 @@ import github.saukiya.sxattribute.util.Message;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -23,21 +20,32 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Saukiya
  */
 public class OnHealthChangeDisplayListener implements Listener {
 
-    @Getter
-    private final List<BossBarData> bossList = new ArrayList<>();
+    private final Map<LivingEntity, BossBarData> bossList = new HashMap<>();
 
-    @Getter
-    private final List<NameData> nameList = new ArrayList<>();
+    private final Map<LivingEntity, NameData> nameList = new HashMap<>();
+
+    public List<BossBarData> getBossList() {
+        return new ArrayList<>(bossList.values());
+    }
+
+    public List<NameData> getNameList() {
+        return new ArrayList<>(nameList.values());
+    }
+
+    public Map<LivingEntity, BossBarData> getBossListMap() {
+        return bossList;
+    }
+
+    public Map<LivingEntity, NameData> getNameListMap() {
+        return nameList;
+    }
 
     private final SXAttribute plugin;
 
@@ -48,10 +56,10 @@ public class OnHealthChangeDisplayListener implements Listener {
             public void run() {
                 //TODO 架构修改为List
                 if (!bossList.isEmpty()) {
-                    Iterator<BossBarData> bossDataIterator = bossList.iterator();
+                    Iterator<BossBarData> bossDataIterator = bossList.values().iterator();
                     while (bossDataIterator.hasNext()) {
                         BossBarData bossBarData = bossDataIterator.next();
-                        if (bossBarData.getEntity() != null && !bossBarData.getEntity().isDead() && bossBarData.getTimeMap().size() > 0) {
+                        if (bossBarData.getEntity() != null && !bossBarData.getEntity().isDead() && !bossBarData.getTimeMap().isEmpty()) {
                             Iterator<Map.Entry<Player, Long>> entryIterator = bossBarData.getTimeMap().entrySet().iterator();
                             while (entryIterator.hasNext()) {
                                 Map.Entry<Player, Long> entry = entryIterator.next();
@@ -60,7 +68,7 @@ public class OnHealthChangeDisplayListener implements Listener {
                                     entryIterator.remove();
                                 }
                             }
-                            if (bossBarData.getTimeMap().size() == 0) {
+                            if (bossBarData.getTimeMap().isEmpty()) {
                                 bossBarData.getBossBar().removeAll();
                                 bossDataIterator.remove();
                             }
@@ -71,7 +79,7 @@ public class OnHealthChangeDisplayListener implements Listener {
                     }
                 }
                 if (!nameList.isEmpty()) {
-                    Iterator<NameData> nameDataIterator = nameList.iterator();
+                    Iterator<NameData> nameDataIterator = nameList.values().iterator();
                     while (nameDataIterator.hasNext()) {
                         NameData nameData = nameDataIterator.next();
                         if (nameData.getEntity() == null || nameData.getEntity().isDead() || nameData.getEntity().getHealth() == getMaxHealth(nameData.getEntity()) || nameData.getTick() < System.currentTimeMillis()) {
@@ -96,18 +104,17 @@ public class OnHealthChangeDisplayListener implements Listener {
             return ((Player) entity).getDisplayName();
         }
         String entityName = entity.getName();
-        for (NameData nameData : nameList) {
-            if (nameData.getEntity().equals(entity)) {
-                if (nameData.getName() != null) {
-                    entityName = Message.replace(nameData.getName());
-                } else {
-                    String tempName = entityName;
-                    entity.setCustomName(null);
-                    entityName = Message.replace(entity.getName());
-                    entity.setCustomName(tempName);
-                }
-                return entityName;
+        NameData nameData = nameList.get(entity);
+        if (nameData != null) {
+            if (nameData.getName() != null) {
+                entityName = Message.replace(nameData.getName());
+            } else {
+                String tempName = entityName;
+                entity.setCustomName(null);
+                entityName = Message.replace(entity.getName());
+                entity.setCustomName(tempName);
             }
+            return entityName;
         }
         return Message.replace(entityName);
     }
@@ -127,16 +134,11 @@ public class OnHealthChangeDisplayListener implements Listener {
         Double maxHealth = getMaxHealth(entity);
         if (health > maxHealth) health = maxHealth;
         double progress = health / maxHealth;
-        BossBarData bossBarData = null;
-        for (BossBarData barData : bossList) {
-            if (barData.getEntity().equals(entity)) {
-                bossBarData = barData;
-                bossBarData.setProgress(progress);
-                bossBarData.updateTitle();
-                break;
-            }
+        BossBarData bossBarData = bossList.get(entity);
+        if (bossBarData != null) {
+            bossBarData.setProgress(progress);
+            bossBarData.updateTitle();
         }
-
         if (event instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent event2 = (EntityDamageByEntityEvent) event;
             if (event2.getDamager() instanceof LivingEntity) {
@@ -153,7 +155,7 @@ public class OnHealthChangeDisplayListener implements Listener {
                     if (bossBarData == null) {
                         bossBarData = new BossBarData(entity, name, maxHealth, progress);
                         bossBarData.setProgress(entity.getHealth() / maxHealth);
-                        bossList.add(bossBarData);
+                        bossList.put(entity, bossBarData);
                     }
                     bossBarData.addPlayer((Player) damager);
                     bossBarData.setProgress(progress);
@@ -177,27 +179,18 @@ public class OnHealthChangeDisplayListener implements Listener {
             }.runTaskLater(plugin, Config.getConfig().getInt(Config.HOLOGRAPHIC_DISPLAY_TIME));
         }
         if (Config.isHealthNameVisible()) {
-            NameData nameData = null;
-            for (NameData data : nameList) {
-                if (data.getEntity().equals(entity)) {
-                    nameData = data;
-                    break;
-                }
-            }
+            NameData nameData = nameList.get(entity);
 
             if (health == 0) {
-                for (int i = nameList.size() - 1; i >= 0; i--) {
-                    NameData data = nameList.get(i);
-                    if (data.getEntity().equals(entity)) {
-                        entity.setCustomName(data.getName());
-                        entity.setCustomNameVisible(data.isVisible());
-                        nameList.remove(i);
-                    }
-                    if (data.getEntity().equals(damager)) {
-                        damager.setCustomName(data.getName());
-                        damager.setCustomNameVisible(data.isVisible());
-                        nameList.remove(i);
-                    }
+                NameData data = nameList.remove(entity);
+                if (data != null) {
+                    entity.setCustomName(data.getName());
+                    entity.setCustomNameVisible(data.isVisible());
+                }
+                data = nameList.remove(damager);
+                if (data != null) {
+                    damager.setCustomName(data.getName());
+                    damager.setCustomNameVisible(data.isVisible());
                 }
             } else if ((damager instanceof Player || nameData != null) && !(entity instanceof Player)) {
                 StringBuilder healthName = new StringBuilder(Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_PREFIX));
@@ -216,7 +209,7 @@ public class OnHealthChangeDisplayListener implements Listener {
                 if (nameData == null) {
                     nameData = new NameData(entity, entity.getCustomName(), entity.isCustomNameVisible());
                     nameData.updateTick();
-                    nameList.add(nameData);
+                    nameList.put(entity, nameData);
                 } else if (damager instanceof Player) {
                     nameData.updateTick();
                 }
@@ -237,15 +230,13 @@ public class OnHealthChangeDisplayListener implements Listener {
         Double maxHealth = getMaxHealth(entity);
         double progress = health > maxHealth ? 1D : health < 0 ? 0D : health / maxHealth;
 
-        for (BossBarData bossBarData : bossList) {
-            if (bossBarData.getEntity().equals(entity)) {
-                if (progress == 1D) {
-                    bossBarData.getBossBar().removeAll();
-                } else {
-                    bossBarData.setProgress(progress);
-                    bossBarData.updateTitle();
-                }
-                break;
+        BossBarData bossBarData = bossList.get(entity);
+        if (bossBarData != null) {
+            if (progress == 1D) {
+                bossBarData.getBossBar().removeAll();
+            } else {
+                bossBarData.setProgress(progress);
+                bossBarData.updateTitle();
             }
         }
 
@@ -264,28 +255,26 @@ public class OnHealthChangeDisplayListener implements Listener {
                 }
             }.runTaskLater(plugin, Config.getConfig().getInt(Config.HOLOGRAPHIC_DISPLAY_TIME));
         }
-        for (NameData nameData : nameList) {
-            if (nameData.getEntity().equals(entity)) {
-                if (progress == 1D) {
-                    nameData.getEntity().setCustomName(nameData.getName());
-                    nameData.getEntity().setCustomNameVisible(nameData.isVisible());
-                    nameList.remove(nameData);
-                } else {
-                    StringBuilder healthName = new StringBuilder(Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_PREFIX));
-                    int maxSize = Config.getConfig().getInt(Config.HEALTH_NAME_VISIBLE_SIZE);
-                    int size = (int) (maxSize * progress);
-                    String current = Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_CURRENT);
-                    String loss = Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_LOSS);
-                    for (int i = 0; i < size; i++) {
-                        healthName.append(current);
-                    }
-                    for (int i = size; i < maxSize; i++) {
-                        healthName.append(loss);
-                    }
-                    healthName = new StringBuilder((healthName + Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_SUFFIX)).replace("&", "§"));
-                    entity.setCustomName(MessageFormat.format(healthName.toString(), SXAttribute.getDf().format(health), SXAttribute.getDf().format(maxHealth)));
+        NameData nameData = nameList.get(entity);
+        if (nameData != null) {
+            if (progress == 1D) {
+                nameData.getEntity().setCustomName(nameData.getName());
+                nameData.getEntity().setCustomNameVisible(nameData.isVisible());
+                nameList.remove(nameData.getEntity());
+            } else {
+                StringBuilder healthName = new StringBuilder(Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_PREFIX));
+                int maxSize = Config.getConfig().getInt(Config.HEALTH_NAME_VISIBLE_SIZE);
+                int size = (int) (maxSize * progress);
+                String current = Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_CURRENT);
+                String loss = Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_LOSS);
+                for (int i = 0; i < size; i++) {
+                    healthName.append(current);
                 }
-                break;
+                for (int i = size; i < maxSize; i++) {
+                    healthName.append(loss);
+                }
+                healthName = new StringBuilder((healthName + Config.getConfig().getString(Config.HEALTH_NAME_VISIBLE_SUFFIX)).replace("&", "§"));
+                entity.setCustomName(MessageFormat.format(healthName.toString(), SXAttribute.getDf().format(health), SXAttribute.getDf().format(maxHealth)));
             }
         }
     }

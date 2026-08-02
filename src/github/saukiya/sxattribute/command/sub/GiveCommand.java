@@ -39,7 +39,7 @@ public class GiveCommand extends SubCommand {
             player = Bukkit.getPlayerExact(args[2]);
             if (player != null) {
                 if (args.length > 3) {
-                    amount = Integer.valueOf(args[3].replaceAll("[^0-9]", ""));
+                    amount = Integer.parseInt(args[3].replaceAll("[^0-9]", ""));
                 }
             } else {
                 sender.sendMessage(Message.getMsg(Message.ADMIN__NO_ONLINE));

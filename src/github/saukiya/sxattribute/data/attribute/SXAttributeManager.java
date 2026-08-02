@@ -14,15 +14,18 @@ import github.saukiya.sxattribute.data.eventdata.sub.UpdateEventData;
 import github.saukiya.sxattribute.event.SXLoadItemDataEvent;
 import github.saukiya.sxattribute.util.Config;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import ru.endlesscode.rpginventory.inventory.InventoryManager;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 属性管理器
@@ -34,13 +37,13 @@ public class SXAttributeManager {
     private static final AttributeMap attributeMap = SubAttribute.attributeMap;
 
     @Getter
-    private final Map<UUID, SXAttributeData> rpgInventoryMap = new HashMap<>();
+    private final Map<UUID, SXAttributeData> rpgInventoryMap = new ConcurrentHashMap<>();
     @Getter
-    private final Map<UUID, SXAttributeData> equipmentMap = new HashMap<>();
+    private final Map<UUID, SXAttributeData> equipmentMap = new ConcurrentHashMap<>();
     @Getter
-    private final Map<UUID, SXAttributeData> handMap = new HashMap<>();
+    private final Map<UUID, SXAttributeData> handMap = new ConcurrentHashMap<>();
     @Getter
-    private final Map<UUID, SXAttributeData> slotMap = new HashMap<>();
+    private final Map<UUID, SXAttributeData> slotMap = new ConcurrentHashMap<>();
 
     private final SXAttribute plugin;
 
@@ -111,41 +114,44 @@ public class SXAttributeManager {
         SXAttributeData sxAttributeDataList = new SXAttributeData();
         for (int i = 0; i < itemArray.length; i++) {
             ItemStack item = itemArray[i];
-            if (item != null && item.hasItemMeta() && item.getItemMeta().hasLore()) {
-                String itemName = item.getItemMeta().hasDisplayName() ? item.getItemMeta().getDisplayName() : item.getType().name();
-                if (itemName.contains("§X")) {
-                    itemArray[i] = null;
-                    continue;
-                }
-                SXAttributeData sxAttributeData = new SXAttributeData();
-                for (String lore : item.getItemMeta().getLore()) {
-                    lore = lore.split("§X")[0];
-                    if (lore.length() > 0) {
-                        for (SubCondition subCondition : plugin.getConditionManager().getConditionMap().values()) {
-                            if (subCondition.containsType(type, true)) {
-                                SXConditionReturnType returnType = subCondition.determine(entity, item, lore);
-                                if (returnType.equals(SXConditionReturnType.ITEM)) {
-                                    sxAttributeData = null;
-                                    break;
-                                } else if (returnType.equals(SXConditionReturnType.LORE)) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta.hasLore()) {
+                    String itemName = meta.hasDisplayName() ? meta.getDisplayName() : item.getType().name();
+                    if (itemName.contains("§X")) {
+                        itemArray[i] = null;
+                        continue;
+                    }
+                    SXAttributeData sxAttributeData = new SXAttributeData();
+                    for (String lore : meta.getLore()) {
+                        lore = lore.split("§X")[0];
+                        if (!lore.isEmpty()) {
+                            for (SubCondition subCondition : plugin.getConditionManager().getConditionMap().values()) {
+                                if (subCondition.containsType(type, true)) {
+                                    SXConditionReturnType returnType = subCondition.determine(entity, item, lore);
+                                    if (returnType.equals(SXConditionReturnType.ITEM)) {
+                                        sxAttributeData = null;
+                                        break;
+                                    } else if (returnType.equals(SXConditionReturnType.LORE)) {
+                                        break;
+                                    }
+                                }
+                            }
+                            if (sxAttributeData == null) {
+                                itemArray[i] = null;
+                                break;
+                            }
+                            for (SubAttribute sxAttribute : sxAttributeData.getAttributeMap().values()) {
+                                if (sxAttribute.loadAttribute(lore)) {
+                                    sxAttributeData.valid();
                                     break;
                                 }
                             }
                         }
-                        if (sxAttributeData == null) {
-                            itemArray[i] = null;
-                            break;
-                        }
-                        for (SubAttribute sxAttribute : sxAttributeData.getAttributeMap().values()) {
-                            if (sxAttribute.loadAttribute(lore)) {
-                                sxAttributeData.valid();
-                                break;
-                            }
-                        }
                     }
-                }
-                if (sxAttributeData != null) {
-                    sxAttributeDataList.add(sxAttributeData);
+                    if (sxAttributeData != null) {
+                        sxAttributeDataList.add(sxAttributeData);
+                    }
                 }
             }
         }
@@ -165,7 +171,7 @@ public class SXAttributeManager {
         SXAttributeData sxAttributeData = new SXAttributeData();
         for (String lore : stringList) {
             lore = lore.split("§X")[0];
-            if (lore.length() > 0) {
+            if (!lore.isEmpty()) {
                 for (SubCondition subCondition : plugin.getConditionManager().getConditionMap().values()) {
                     if (subCondition.containsType(type, true)) {
                         SXConditionReturnType returnType = subCondition.determine(entity, null, lore);
@@ -196,13 +202,16 @@ public class SXAttributeManager {
      * @return boolean
      */
     public Boolean isUse(LivingEntity entity, SXConditionType type, ItemStack item) {
-        if (type != null && item != null && item.hasItemMeta() && item.getItemMeta().hasLore()) {
-            List<String> loreList = item.getItemMeta().getLore();
-            for (String lore : loreList) {
-                for (SubCondition subCondition : plugin.getConditionManager().getConditionMap().values()) {
-                    if (subCondition.containsType(type, true)) {
-                        if (subCondition.determine(entity, item, lore).equals(SXConditionReturnType.ITEM)) {
-                            return false;
+        if (type != null && item != null && item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            if (meta.hasLore()) {
+                List<String> loreList = meta.getLore();
+                for (String lore : loreList) {
+                    for (SubCondition subCondition : plugin.getConditionManager().getConditionMap().values()) {
+                        if (subCondition.containsType(type, true)) {
+                            if (subCondition.determine(entity, item, lore).equals(SXConditionReturnType.ITEM)) {
+                                return false;
+                            }
                         }
                     }
                 }
@@ -217,25 +226,23 @@ public class SXAttributeManager {
      * @param entity Player
      */
     public void updateStatsEvent(LivingEntity entity) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (entity instanceof Player) {
-                    if (Config.isClearDefaultAttributeAll()) {
-                        plugin.getItemUtil().clearAttribute((Player) entity);
-                    } else if (Config.isClearDefaultAttributeReset()) {
-                        plugin.getItemUtil().removeAttribute((Player) entity);
-                    }
-                }
-                UpdateEventData updateEventData = new UpdateEventData(entity);
-                SXAttributeData attributeData = getEntityData(entity);
-                for (SubAttribute subAttribute : attributeData.getAttributeMap().values()) {
-                    if (subAttribute.containsType(SXAttributeType.UPDATE)) {
-                        subAttribute.eventMethod(updateEventData);
-                    }
+        Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+            if (entity instanceof Player) {
+                if (Config.isClearDefaultAttributeAll()) {
+                    plugin.getItemUtil().clearAttribute((Player) entity);
+                } else if (Config.isClearDefaultAttributeReset()) {
+                    plugin.getItemUtil().removeAttribute((Player) entity);
                 }
             }
-        }.runTask(plugin);
+            UpdateEventData updateEventData = new UpdateEventData(entity);
+            SXAttributeData attributeData = getEntityData(entity);
+            for (SubAttribute subAttribute : attributeData.getAttributeMap().values()) {
+                if (subAttribute.containsType(SXAttributeType.UPDATE)) {
+                    subAttribute.eventMethod(updateEventData);
+                }
+            }
+            return "";
+        });
     }
 
     public void loadDefaultAttributeData() {
@@ -348,14 +355,22 @@ public class SXAttributeManager {
      */
     public void loadSlotData(Player player) {
         // 饰品更新
-        if (!SXAttribute.isRpgInventory() && Config.getConfig().getStringList(Config.REGISTER_SLOTS_LIST).size() > 0) {
+        if (!SXAttribute.isRpgInventory() && !Config.getConfig().getStringList(Config.REGISTER_SLOTS_LIST).isEmpty()) {
             List<ItemStack> itemList = new ArrayList<>();
             Inventory inv = player.getInventory();
             plugin.getRegisterSlotManager().getRegisterSlotMap().forEach((slot, registerSlot) ->
             {
                 ItemStack item = inv.getItem(slot);
-                if (item != null && !item.getType().equals(Material.AIR) && item.getItemMeta().hasLore() && item.getItemMeta().getLore().stream().anyMatch(lore -> lore.contains(registerSlot.getName()))) {
-                    itemList.add(item);
+                if (item != null && item.getType() != Material.AIR) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta.hasLore()) {
+                        for (String string : meta.getLore()) {
+                            if (string.contains(registerSlot.getName())) {
+                                itemList.add(item);
+                                break;
+                            }
+                        }
+                    }
                 }
             });
             ItemStack[] items = itemList.toArray(new ItemStack[0]);

@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * API 获取方式为 SXAttribute.getApi()
@@ -22,7 +23,7 @@ import java.util.*;
  */
 public class SXAttributeAPI {
 
-    private final Map<UUID, Map<Class<?>, SXAttributeData>> map = new HashMap<>();
+    private final Map<UUID, Map<String, SXAttributeData>> map = new ConcurrentHashMap<>();
     private final SXAttribute plugin;
 
     /**
@@ -42,19 +43,20 @@ public class SXAttributeAPI {
      */
     public SXAttributeData getAPIStats(UUID uuid) {
         SXAttributeData attributeData = new SXAttributeData();
-        if (map.containsKey(uuid)) {
-            for (Class<?> c : map.get(uuid).keySet()) {
-                attributeData.add(map.get(uuid).get(c));
+        Map<String, SXAttributeData> attributeMap = map.get(uuid);
+        if (attributeMap != null) {
+            for (SXAttributeData value : attributeMap.values()) {
+                attributeData.add(value);
             }
         }
         return attributeData;
     }
 
     /**
-     * 获取 ItemUtil(NBT反射类)
+     * 获取 NMSItemUtil(NBT反射类)
      * key值结构为:SX-Attribute-{key}
      *
-     * @return ItemUtil
+     * @return NMSItemUtil
      */
     public ItemUtil getItemUtil() {
         return plugin.getItemUtil();
@@ -122,7 +124,13 @@ public class SXAttributeAPI {
      * @return SXAttributeData / null
      */
     public SXAttributeData getEntityAPIData(Class<?> c, UUID uuid) {
-        return map.containsKey(uuid) ? map.get(uuid).get(c) : null;
+        return getEntityAPIData(c.getName(), uuid);
+    }
+
+    public SXAttributeData getEntityAPIData(String source, UUID uuid) {
+        Map<String, SXAttributeData> attributeMap = map.get(uuid);
+        if (attributeMap == null) return null;
+        return attributeMap.get(source);
     }
 
     /**
@@ -133,7 +141,13 @@ public class SXAttributeAPI {
      * @return boolean
      */
     public boolean isEntityAPIData(Class<?> c, UUID uuid) {
-        return map.containsKey(uuid) && map.get(uuid).containsKey(c);
+        return isEntityAPIData(c.getName(), uuid);
+    }
+
+    public boolean isEntityAPIData(String source, UUID uuid) {
+        Map<String, SXAttributeData> attributeMap = map.get(uuid);
+        if (attributeMap == null) return false;
+        return attributeMap.containsKey(source);
     }
 
     /**
@@ -144,13 +158,23 @@ public class SXAttributeAPI {
      * @param attributeData SXAttributeData
      */
     public void setEntityAPIData(Class<?> c, UUID uuid, SXAttributeData attributeData) {
-        Map<Class<?>, SXAttributeData> statsMap = new HashMap<>();
-        if (map.containsKey(uuid)) {
-            statsMap = map.get(uuid);
-        } else {
-            map.put(uuid, statsMap);
-        }
-        statsMap.put(c, attributeData);
+        setEntityAPIData(c.getName(), uuid, attributeData);
+    }
+
+    public void setEntityAPIData(String source, UUID uuid, SXAttributeData attributeData) {
+        map.computeIfAbsent(uuid, k -> new HashMap<>()).put(source, attributeData);
+    }
+
+    public void setEntityAPIData(String source, LivingEntity entity, SXAttributeData attributeData) {
+        setEntityAPIData(source, entity.getUniqueId(), attributeData);
+    }
+
+    public void setEntityAPIData(String source, LivingEntity entity, ItemStack item) {
+        setEntityAPIData(source, entity.getUniqueId(), getItemData(entity, SXConditionType.ALL, item));
+    }
+
+    public void setEntityAPIData(String source, LivingEntity entity, List<String> lore) {
+        setEntityAPIData(source, entity.getUniqueId(), getLoreData(entity, SXConditionType.ALL, lore));
     }
 
     /**
@@ -162,11 +186,17 @@ public class SXAttributeAPI {
      * @return SXAttributeData / null
      */
     public SXAttributeData removeEntityAPIData(Class<?> c, UUID uuid) {
-        SXAttributeData attributeData = null;
-        if (map.containsKey(uuid) && map.get(uuid).containsKey(c)) {
-            attributeData = map.get(uuid).remove(c);
-        }
-        return attributeData;
+        return removeEntityAPIData(c.getName(), uuid);
+    }
+
+    public SXAttributeData removeEntityAPIData(String source, UUID uuid) {
+        Map<String, SXAttributeData> attributeDataMap = map.get(uuid);
+        if (attributeDataMap == null) return null;
+        return attributeDataMap.remove(source);
+    }
+
+    public SXAttributeData removeEntityAPIData(String source, LivingEntity entity) {
+        return removeEntityAPIData(source, entity.getUniqueId());
     }
 
     /**
@@ -175,8 +205,12 @@ public class SXAttributeAPI {
      * @param c Class
      */
     public void removePluginAllEntityData(Class<?> c) {
-        for (Map<Class<?>, SXAttributeData> statsMap : map.values()) {
-            statsMap.remove(c);
+        removePluginAllEntityData(c.getName());
+    }
+
+    public void removePluginAllEntityData(String source) {
+        for (Map<String, SXAttributeData> statsMap : map.values()) {
+            statsMap.remove(source);
         }
     }
 

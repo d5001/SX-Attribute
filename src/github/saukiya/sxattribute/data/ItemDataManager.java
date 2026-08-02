@@ -5,12 +5,9 @@ import github.saukiya.sxattribute.data.attribute.SubAttribute;
 import github.saukiya.sxattribute.data.condition.SubCondition;
 import github.saukiya.sxattribute.data.condition.sub.DurabilityCondition;
 import github.saukiya.sxattribute.util.Config;
-import github.saukiya.sxattribute.util.ItemUtil;
 import github.saukiya.sxattribute.util.Message;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -20,7 +17,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.io.File;
@@ -82,7 +78,7 @@ public class ItemDataManager {
         List<String> loreList = item.getItemMeta().getLore();
         for (String lore : loreList) {
             if (lore.contains(Config.getConfig().getString(Config.NAME_SELL))) {
-                sell = Double.valueOf(SubAttribute.getNumber(lore));
+                sell = Double.parseDouble(SubAttribute.getNumber(lore));
             }
         }
         return sell;
@@ -149,7 +145,7 @@ public class ItemDataManager {
                     } else {
                         ids.add(itemYml.getString(name + ".ID", "260"));
                     }
-                    if (ids.size() == 0) {
+                    if (ids.isEmpty()) {
                         Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "§cItem: §4" + name + " §cNull ID!");
                         ids.add("260");
                     }
@@ -175,21 +171,23 @@ public class ItemDataManager {
                         hashCode += itemLore.hashCode() / 100;
                     }
 
-                    if (item.getEnchantments().size() > 0) {
+                    if (!item.getEnchantments().isEmpty()) {
                         hashCode += enchantList.hashCode() / 100;
                     }
 
-                    if (item.getItemMeta().getItemFlags().size() > 0) {
-                        hashCode += item.getItemMeta().getItemFlags().hashCode() / 100;
+                    ItemMeta meta = item.getItemMeta();
+                    if (!meta.getItemFlags().isEmpty()) {
+                        hashCode += meta.getItemFlags().hashCode() / 100;
                     }
 
                     if (colorStr != null) {
-                        Color color = Color.fromRGB(Integer.valueOf(colorStr.split(",")[0]), Integer.valueOf(colorStr.split(",")[1]), Integer.valueOf(colorStr.split(",")[2]));
+                        String[] rgb = colorStr.split(",");
+                        Color color = Color.fromRGB(Integer.parseInt(rgb[0]), Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2]));
                         hashCode += color.hashCode() / 100;
                     }
 
                     // 记录物品名 HashCode
-                    if (Config.isClearDefaultAttributePlugin() && item.getItemMeta().hasLore()) {
+                    if (Config.isClearDefaultAttributePlugin() && meta.hasLore()) {
                         plugin.getItemUtil().clearAttribute(item);
                     }
 
@@ -303,7 +301,7 @@ public class ItemDataManager {
             ItemData itemData = itemMap.get(dataName);
             if (itemData != null && !itemData.isImportItem()) {
                 // 获取物品的HashCode
-                int hasCode = Integer.valueOf(Objects.requireNonNull(plugin.getItemUtil().getNBT(item, "HasCode")));
+                int hasCode = Integer.parseInt(Objects.requireNonNull(plugin.getItemUtil().getNBT(item, "HasCode")));
                 ItemStack dataItem = itemData.getItem(plugin, player);
                 assert dataItem != null;
                 ItemMeta dataMeta = dataItem.getItemMeta();
@@ -315,10 +313,10 @@ public class ItemDataManager {
                     plugin.getItemUtil().setNBT(item, "HasCode", String.valueOf(dataHasCode));
                     // 更新时耐久度百分比不变
                     List<String> dataItemLore = dataMeta.getLore();
+                    List<String> itemLoreList = item.getItemMeta().getLore();
                     for (int i = 0; i < dataItemLore.size(); i++) {
                         // 判断是否有耐久度
                         if (dataItemLore.get(i).contains(Config.getConfig().getString(Config.NAME_DURABILITY))) {
-                            List<String> itemLoreList = item.getItemMeta().getLore();
                             for (String itemLote : itemLoreList) {
                                 //判断原来是否有耐久lore
                                 if (itemLote.contains(Config.getConfig().getString(Config.NAME_DURABILITY))) {
@@ -383,9 +381,7 @@ public class ItemDataManager {
         }
         List<String> lore = itemMeta.getLore();
         if (lore != null) {
-            for (int i = 0; i < lore.size(); i++) {
-                lore.set(i, lore.get(i).replace("§", "&"));
-            }
+            lore.replaceAll(string -> string.replace("§", "&"));
         }
         YamlConfiguration itemData = new YamlConfiguration();
         if (itemDefaultFile.exists() && !itemDefaultFile.isDirectory()) {
@@ -393,12 +389,12 @@ public class ItemDataManager {
         }
         List<String> enchantList = new ArrayList<>();
         if (itemMeta.hasEnchants()) {
-            for (Enchantment enchant : itemMeta.getEnchants().keySet()) {
-                enchantList.add(enchant.getName() + ":" + itemMeta.getEnchants().get(enchant));
+            for (Map.Entry<Enchantment, Integer> entry : itemMeta.getEnchants().entrySet()) {
+                enchantList.add(entry.getKey().getName() + ":" + entry.getValue());
             }
         }
         List<String> itemFlagList = new ArrayList<>();
-        if (itemMeta.getItemFlags().size() > 0) {
+        if (!itemMeta.getItemFlags().isEmpty()) {
             for (ItemFlag itemFlag : itemMeta.getItemFlags()) {
                 itemFlagList.add(itemFlag.name());
             }
@@ -416,8 +412,8 @@ public class ItemDataManager {
         itemData.set(itemName + ".Name", name);
         itemData.set(itemName + ".ID", id);
         if (lore != null) itemData.set(itemName + ".Lore", lore);
-        if (enchantList.size() > 0) itemData.set(itemName + ".EnchantList", enchantList);
-        if (itemFlagList.size() > 0) itemData.set(itemName + ".ItemFlagList", itemFlagList);
+        if (!enchantList.isEmpty()) itemData.set(itemName + ".EnchantList", enchantList);
+        if (!itemFlagList.isEmpty()) itemData.set(itemName + ".ItemFlagList", itemFlagList);
         itemData.set(itemName + ".Unbreakable", SubCondition.getUnbreakable(itemMeta));
         itemData.set(itemName + ".Color", color);
         itemData.set(itemName + ".SkullName", skullName);

@@ -19,7 +19,7 @@ public class SXAttributeData {
     private boolean valid = false;
 
     @Getter
-    private Map<Integer, SubAttribute> attributeMap = SXAttributeManager.cloneSXAttributeList();
+    private final Map<Integer, SubAttribute> attributeMap = SXAttributeManager.cloneSXAttributeList();
 
     /**
      * 获取一个属性值

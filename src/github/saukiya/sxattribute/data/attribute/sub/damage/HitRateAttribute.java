@@ -40,7 +40,7 @@ public class HitRateAttribute extends SubAttribute {
     @Override
     public boolean loadAttribute(String lore) {
         if (lore.contains(Config.getConfig().getString(Config.NAME_HIT_RATE))) {
-            getAttributes()[0] += Double.valueOf(getNumber(lore));
+            getAttributes()[0] += Double.parseDouble(getNumber(lore));
             return true;
         }
         return false;

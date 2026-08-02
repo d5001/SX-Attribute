@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -67,6 +69,25 @@ public abstract class SubAttribute {
         return d > 0 && d / 100D > SXAttribute.getRandom().nextDouble();
     }
 
+    private static final Pattern COLOR_AND_KEEP = Pattern.compile("§+[a-z0-9]|[^-0-9.]");
+
+    /**
+     * 从字符串中提取数字（支持负数和小数）
+     * @param lore 输入字符串
+     * @return 提取的数字字符串，若无有效数字则返回 "0"
+     */
+    public static String getNumber(String lore) {
+        if (lore == null || lore.isEmpty()) {
+            return "0";
+        }
+
+        String str = COLOR_AND_KEEP.matcher(lore).replaceAll("");
+
+        if (str.isEmpty() || str.replaceAll("[^.]", "").length() > 1) {
+            return "0";
+        }
+        return str;
+    }
 
     /**
      * 获取属性值
@@ -74,10 +95,10 @@ public abstract class SubAttribute {
      * @param lore String
      * @return String
      */
-    public static String getNumber(String lore) {
+    /*public static String getNumber(String lore) {
         String str = lore.replaceAll("§+[a-z0-9]", "").replaceAll("[^-0-9.]", "");
-        return str.length() == 0 || str.replaceAll("[^.]", "").length() > 1 ? "0" : str;
-    }
+        return str.isEmpty() || str.replaceAll("[^.]", "").length() > 1 ? "0" : str;
+    }*/
 
     /**
      * 获取类型
@@ -95,7 +116,10 @@ public abstract class SubAttribute {
      * @return boolean
      */
     public final boolean containsType(SXAttributeType attributeType) {
-        return Arrays.stream(attributeTypes).anyMatch(type -> type.equals(attributeType));
+        for (SXAttributeType type : attributeTypes) {
+            if (type.equals(attributeType)) return true;
+        }
+        return false;
     }
 
     /**
@@ -205,6 +229,13 @@ public abstract class SubAttribute {
         return doubles;
     }
 
+    public final boolean noZeroAttribute() {
+        for (double value : doubles) {
+            if (value != 0) return true;
+        }
+        return false;
+    }
+
     /**
      * 设置属性
      *
@@ -243,7 +274,7 @@ public abstract class SubAttribute {
         String[] args1 = attributeString.split("#");
         if (args1[0].equals(getName())) {
             List<String> list = args1[1].contains("/") ? Arrays.asList(args1[1].split("/")) : Collections.singletonList(args1[1]);
-            setAttributes(list.stream().filter(s -> s.length() > 0).map(Double::valueOf).toArray(Double[]::new));
+            setAttributes(list.stream().filter(s -> !s.isEmpty()).map(Double::valueOf).toArray(Double[]::new));
         }
     }
 

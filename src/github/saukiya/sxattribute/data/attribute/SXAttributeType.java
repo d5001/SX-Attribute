@@ -26,10 +26,10 @@ public class SXAttributeType {
     public static final SXAttributeType OTHER = new SXAttributeType(Type.OTHER);
 
     @Getter
-    private String name;
+    private final String name;
 
     @Getter
-    private Type type;
+    private final Type type;
 
     public SXAttributeType(Type type) {
         this.type = type;
@@ -56,7 +56,7 @@ public class SXAttributeType {
      */
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof SXAttributeType && type.equals(((SXAttributeType) obj).type);
+        return obj instanceof SXAttributeType && type == ((SXAttributeType) obj).type;
     }
 
     /**
@@ -69,7 +69,7 @@ public class SXAttributeType {
         OTHER("OTHER");
 
         @Getter
-        String name;
+        final String name;
 
         Type(String name) {
             this.name = name;

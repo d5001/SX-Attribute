@@ -47,7 +47,7 @@ public class ItemUtil {
     private Method xGetListString;
     private Method xSize;
 
-    private SXAttribute plugin;
+    public SXAttribute plugin;
 
     /**
      * 加载NBT反射类
@@ -57,37 +57,43 @@ public class ItemUtil {
      * @throws NoSuchMethodException  NoSuchMethodException
      * @throws ClassNotFoundException ClassNotFoundException
      */
-    public ItemUtil(SXAttribute plugin) throws NoSuchMethodException, ClassNotFoundException {
+    public ItemUtil(SXAttribute plugin, boolean reflection) throws NoSuchMethodException, ClassNotFoundException {
         this.plugin = plugin;
-        String packet = Bukkit.getServer().getClass().getPackage().getName();
-        String nmsName = "net.minecraft.server." + packet.substring(packet.lastIndexOf('.') + 1);
-        xCraftItemStack = Class.forName(packet + ".inventory.CraftItemStack");
-        Class<?> xNMSItemStack = Class.forName(nmsName + ".ItemStack");
-        xNBTTagCompound = Class.forName(nmsName + ".NBTTagCompound");
-        Class<?> xNBTTagString = Class.forName(nmsName + ".NBTTagString");
-        Class<?> xNBTTagDouble = Class.forName(nmsName + ".NBTTagDouble");
-        Class<?> xNBTTagInt = Class.forName(nmsName + ".NBTTagInt");
-        xNBTTagList = Class.forName(nmsName + ".NBTTagList");
-        Class<?> xNBTBase = Class.forName(nmsName + ".NBTBase");
-        xNewNBTTagString = xNBTTagString.getConstructor(String.class);
-        xNewNBTTagDouble = xNBTTagDouble.getConstructor(double.class);
-        xNewNBTTagInt = xNBTTagInt.getConstructor(int.class);
+        if (reflection) {
+            String packet = Bukkit.getServer().getClass().getPackage().getName();
+            String nmsName = "net.minecraft.server." + packet.substring(packet.lastIndexOf('.') + 1);
+            xCraftItemStack = Class.forName(packet + ".inventory.CraftItemStack");
+            Class<?> xNMSItemStack = Class.forName(nmsName + ".ItemStack");
+            xNBTTagCompound = Class.forName(nmsName + ".NBTTagCompound");
+            Class<?> xNBTTagString = Class.forName(nmsName + ".NBTTagString");
+            Class<?> xNBTTagDouble = Class.forName(nmsName + ".NBTTagDouble");
+            Class<?> xNBTTagInt = Class.forName(nmsName + ".NBTTagInt");
+            xNBTTagList = Class.forName(nmsName + ".NBTTagList");
+            Class<?> xNBTBase = Class.forName(nmsName + ".NBTBase");
+            xNewNBTTagString = xNBTTagString.getConstructor(String.class);
+            xNewNBTTagDouble = xNBTTagDouble.getConstructor(double.class);
+            xNewNBTTagInt = xNBTTagInt.getConstructor(int.class);
 
-        xAsNMSCopay = xCraftItemStack.getDeclaredMethod("asNMSCopy", ItemStack.class);
-        xGetTag = xNMSItemStack.getDeclaredMethod("getTag");
-        xHasTag = xNMSItemStack.getDeclaredMethod("hasTag");
-        xSet = xNBTTagCompound.getDeclaredMethod("set", String.class, xNBTBase);
-        xAdd = xNBTTagList.getDeclaredMethod("add", xNBTBase);
-        xRemove = xNBTTagCompound.getDeclaredMethod("remove", String.class);
-        xSetTag = xNMSItemStack.getDeclaredMethod("setTag", xNBTTagCompound);
-        xAsBukkitCopy = xCraftItemStack.getDeclaredMethod("asBukkitCopy", xNMSItemStack);
+            xAsNMSCopay = xCraftItemStack.getDeclaredMethod("asNMSCopy", ItemStack.class);
+            xGetTag = xNMSItemStack.getDeclaredMethod("getTag");
+            xHasTag = xNMSItemStack.getDeclaredMethod("hasTag");
+            xSet = xNBTTagCompound.getDeclaredMethod("set", String.class, xNBTBase);
+            xAdd = xNBTTagList.getDeclaredMethod("add", xNBTBase);
+            xRemove = xNBTTagCompound.getDeclaredMethod("remove", String.class);
+            xSetTag = xNMSItemStack.getDeclaredMethod("setTag", xNBTTagCompound);
+            xAsBukkitCopy = xCraftItemStack.getDeclaredMethod("asBukkitCopy", xNMSItemStack);
 
-        xHasKey = xNBTTagCompound.getDeclaredMethod("hasKey", String.class);
-        xGet = xNBTTagCompound.getDeclaredMethod("get", String.class);
-        xGetString = xNBTTagCompound.getDeclaredMethod("getString", String.class);
-        xGetListString = xNBTTagList.getDeclaredMethod("getString", int.class);
-        xSize = xNBTTagList.getDeclaredMethod("size");
-        Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "Load ItemUtil! ");
+            xHasKey = xNBTTagCompound.getDeclaredMethod("hasKey", String.class);
+            xGet = xNBTTagCompound.getDeclaredMethod("get", String.class);
+            xGetString = xNBTTagCompound.getDeclaredMethod("getString", String.class);
+            xGetListString = xNBTTagList.getDeclaredMethod("getString", int.class);
+            xSize = xNBTTagList.getDeclaredMethod("size");
+            Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "Load NMSItemUtil! ");
+        }
+    }
+
+    public ItemUtil(SXAttribute plugin) throws ClassNotFoundException, NoSuchMethodException {
+        this(plugin, true);
     }
 
     /**
@@ -135,7 +141,7 @@ public class ItemUtil {
      * @param addSpeed double[]
      * @return double
      */
-    private double getAttackSpeed(ItemStack item, double... addSpeed) {
+    protected double getAttackSpeed(ItemStack item, double... addSpeed) {
         double attackSpeed = -0.30D;
         String itemType = item.getType().name();
         if (itemType.contains("_PICKAXE")) {
@@ -257,7 +263,7 @@ public class ItemUtil {
      *
      * @param item ItemStack
      */
-    private void removeAttribute(ItemStack item) {
+    protected void removeAttribute(ItemStack item) {
         if (item != null && (!isNBT(item, "Clear") || !Objects.equals(getNBT(item, "Clear"), "no"))) {
             try {
                 Object nmsItem = xAsNMSCopay.invoke(xCraftItemStack, setNBT(item, "Clear", "no"));
@@ -420,6 +426,15 @@ public class ItemUtil {
         }
     }
 
+    public String getItemName(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) return "AIR";
+        if (item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            if (meta.hasDisplayName()) return meta.getDisplayName();
+        }
+        return item.getType().name();
+    }
+
     /**
      * 快速生成物品
      *
@@ -437,14 +452,12 @@ public class ItemUtil {
         int itemMaterial = 0;
         int itemDurability = 0;
         if (id != null) {
-            if (id.contains(":") && id.split(":")[0].replaceAll("[^0-9]", "").length() > 0) {
-                String[] idSplit = id.split(":");
-                if (idSplit[0].replaceAll("[^0-9]", "").length() > 0 && idSplit[1].replaceAll("[^0-9]", "").length() > 0) {
-                    itemMaterial = Integer.valueOf(idSplit[0].replaceAll("[^0-9]", ""));
-                    itemDurability = Integer.valueOf(idSplit[1].replaceAll("[^0-9]", ""));
-                }
-            } else if (id.replaceAll("[^0-9]", "").length() > 0) {
-                itemMaterial = Integer.valueOf(id.replaceAll("[^0-9]", ""));
+            String[] split = id.split(":");
+            if (split.length == 1) {
+                itemMaterial = Integer.parseInt(id);
+            } else if (split.length > 1) {
+                itemMaterial = Integer.parseInt(split[0]);
+                itemDurability = Integer.parseInt(split[1]);
             }
         }
         ItemStack item = new ItemStack(itemMaterial, 1, (short) itemDurability);
@@ -457,12 +470,10 @@ public class ItemUtil {
             meta.setDisplayName(itemName.replace("&", "§"));
         }
         if (itemLore != null) {
-            for (int i = 0; i < itemLore.size(); i++) {
-                itemLore.set(i, itemLore.get(i).replace("&", "§"));
-            }
+            itemLore.replaceAll(string -> string.replace("&", "§"));
             meta.setLore(itemLore);
         }
-        if (itemFlagList != null && itemFlagList.size() > 0) {
+        if (itemFlagList != null && !itemFlagList.isEmpty()) {
             for (String flagName : itemFlagList) {
                 try {
                     ItemFlag itemFlag = ItemFlag.valueOf(flagName);
@@ -482,7 +493,8 @@ public class ItemUtil {
             }
         }
         if (color != null && meta instanceof LeatherArmorMeta) {
-            Color c = Color.fromRGB(Integer.valueOf(color.split(",")[0]), Integer.valueOf(color.split(",")[1]), Integer.valueOf(color.split(",")[2]));
+            String[] split = color.split(",");
+            Color c = Color.fromRGB(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
             ((LeatherArmorMeta) meta).setColor(c);
         }
         if (skullName != null && meta instanceof SkullMeta) {

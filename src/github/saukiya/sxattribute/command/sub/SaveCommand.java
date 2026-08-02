@@ -46,10 +46,10 @@ public class SaveCommand extends SubCommand {
             } else {
                 plugin.getItemDataManager().saveItem(itemName, itemStack);
             }
-            sender.sendMessage(Message.getMsg(Message.ADMIN__SAVE_ITEM, itemStack.getItemMeta().hasDisplayName() ? itemStack.getItemMeta().getDisplayName() : itemStack.getType().name(), args[1]));
+            sender.sendMessage(Message.getMsg(Message.ADMIN__SAVE_ITEM, plugin.getItemUtil().getItemName(itemStack), args[1]));
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
-            sender.sendMessage(Message.getMsg(Message.ADMIN__SAVE_ITEM_ERROR, itemStack.getItemMeta().hasDisplayName() ? itemStack.getItemMeta().getDisplayName() : itemStack.getType().name(), args[1]));
+            sender.sendMessage(Message.getMsg(Message.ADMIN__SAVE_ITEM_ERROR, plugin.getItemUtil().getItemName(itemStack), args[1]));
         }
     }
 

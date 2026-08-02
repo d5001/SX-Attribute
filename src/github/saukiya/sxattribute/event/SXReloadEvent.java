@@ -17,7 +17,7 @@ public class SXReloadEvent extends Event {
     private static final HandlerList handlers = new HandlerList();
 
     @Getter
-    private CommandSender sender;
+    private final CommandSender sender;
 
     public SXReloadEvent(CommandSender sender) {
         this.sender = sender;

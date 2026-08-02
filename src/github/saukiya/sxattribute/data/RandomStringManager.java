@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author Saukiya
@@ -37,6 +38,9 @@ public class RandomStringManager {
         return map.entrySet();
     }
 
+    private static final Pattern NON_DIGIT = Pattern.compile("[^.0-9]");
+    private static final Pattern NON_INTEGER = Pattern.compile("[^0-9]");
+
     /**
      * 专业处理随机文本四十年
      *
@@ -50,8 +54,9 @@ public class RandomStringManager {
             if (Config.isRandomString()) {
                 List<String> replaceLockStringList = getStringList("<l:", ">", string);
                 for (String str : replaceLockStringList) {
-                    if (lockMap.containsKey(str)) {
-                        string = string.replace("<l:" + str + ">", lockMap.get(str));
+                    String result = lockMap.get(str);
+                    if (result != null) {
+                        string = string.replace("<l:" + str + ">", result);
                     } else {
                         String randomString = getRandomString(itemName, str, lockMap);
                         if (!randomString.equals("%DeleteLore%")) {
@@ -76,9 +81,9 @@ public class RandomStringManager {
             for (String str : replaceIntList) {
                 String[] strSplit = str.split("_");
                 if (strSplit.length > 1) {
-                    int i1 = Integer.valueOf(strSplit[0].replaceAll("[^0-9]", ""));
-                    int i2 = Integer.valueOf(strSplit[1].replaceAll("[^0-9]", "")) + 1;
-                    string = string.replaceFirst("<r:" + str + ">", String.valueOf(SXAttribute.getRandom().nextInt((i2 - i1) < 1 ? 1 : (i2 - i1)) + i1));
+                    int i1 = Integer.parseInt(NON_INTEGER.matcher(strSplit[0]).replaceAll(""));
+                    int i2 = Integer.parseInt(NON_INTEGER.matcher(strSplit[1]).replaceAll("")) + 1;
+                    string = string.replaceFirst("<r:" + str + ">", String.valueOf(SXAttribute.getRandom().nextInt(Math.max((i2 - i1), 1)) + i1));
                 }
             }
             // 小数随机
@@ -86,18 +91,18 @@ public class RandomStringManager {
             for (String str : replaceDoubleList) {
                 String[] strSplit = str.split("_");
                 if (strSplit.length > 1) {
-                    double d1 = Double.valueOf(strSplit[0].replaceAll("[^.0-9]", ""));
-                    double d2 = Double.valueOf(strSplit[1].replaceAll("[^.0-9]", "")) + 1;
+                    double d1 = Double.parseDouble(NON_DIGIT.matcher(strSplit[0]).replaceAll(""));
+                    double d2 = Double.parseDouble(NON_DIGIT.matcher(strSplit[1]).replaceAll("")) + 1;
                     string = string.replaceFirst("<d:" + str + ">", SXAttribute.getDf().format(SXAttribute.getRandom().nextDouble() * (d2 - d1) + d1));
                 }
             }
             // 日期随机
             List<String> replaceTimeList = getStringList("<t:", ">", string);
-            if (replaceTimeList.size() > 0) {
+            if (!replaceTimeList.isEmpty()) {
                 SimpleDateFormatUtils ft = SXAttribute.getSdf();
                 for (String str : replaceTimeList) {
-                    String addTime = str.replaceAll("[^0-9]", "") + "000";
-                    long time = System.currentTimeMillis() + Long.valueOf(addTime);
+                    String addTime = NON_INTEGER.matcher(str).replaceAll("") + "000";
+                    long time = System.currentTimeMillis() + Long.parseLong(addTime);
                     string = string.replaceFirst("<t:" + str + ">", ft.format(time));
                 }
             }
@@ -120,8 +125,9 @@ public class RandomStringManager {
             if (lockMap != null) {
                 List<String> replaceLockStringList = getStringList("<l:", ">", str1);
                 for (String str : replaceLockStringList) {
-                    if (lockMap.containsKey(str)) {
-                        str1 = str1.replace("<l:" + str + ">", lockMap.get(str));
+                    String result = lockMap.get(str);
+                    if (result != null) {
+                        str1 = str1.replace("<l:" + str + ">", result);
                     } else {
                         String randomString = getRandomString(itemName, str, lockMap);
                         if (randomString != null) {

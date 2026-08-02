@@ -1,6 +1,7 @@
 package github.saukiya.sxattribute.listener;
 
 import github.saukiya.sxattribute.SXAttribute;
+import github.saukiya.sxattribute.data.condition.SXConditionType;
 import github.saukiya.sxattribute.util.Message;
 import io.lumine.xikage.mythicmobs.api.bukkit.events.MythicMobSpawnEvent;
 import io.lumine.xikage.mythicmobs.mobs.MythicMob;
@@ -27,10 +28,15 @@ public class OnMythicmobsSpawnListener implements Listener {
 
     @EventHandler
     void onMythicMobSpawnEvent(MythicMobSpawnEvent event) {
+
         if (event.getEntity() instanceof LivingEntity) {
             MythicMob mm = event.getMobType();
-            List<String> list = mm.getEquipment();
             LivingEntity entity = (LivingEntity) event.getEntity();
+
+            SXAttribute.getApi().setEntityAPIData("MythicMobs.Attribute", entity, mm.getConfig().getStringList("Attribute"));
+
+            List<String> list = mm.getConfig().getStringList("Equipment");
+
             EntityEquipment eq;
             eq = entity.getEquipment();
             for (String str : list) {
@@ -43,14 +49,14 @@ public class OnMythicmobsSpawnListener implements Listener {
                         String strSplitReplaceAll = args1[1].replaceAll("[^0-9]", "");
                         if (args1[1].contains(" ")) {
                             String[] args1Split = args1[1].split(" ");
-                            if (args1Split.length > 1 && args1Split[1].replaceAll("[^0-9.]", "").length() > 0 && SXAttribute.getRandom().nextDouble() > Double.valueOf(args1Split[1].replaceAll("[^0-9.]", ""))) {
+                            if (args1Split.length > 1 && args1Split[1].replaceAll("[^0-9.]", "").length() > 0 && SXAttribute.getRandom().nextDouble() > Double.parseDouble(args1Split[1].replaceAll("[^0-9.]", ""))) {
                                 continue;
                             } else {
                                 strSplitReplaceAll = args1Split[0].replace("[^0-9]", "");
                             }
                         }
                         if (strSplitReplaceAll.length() == 1) {
-                            position = Integer.valueOf(strSplitReplaceAll);
+                            position = Integer.parseInt(strSplitReplaceAll);
                         }
                         ItemStack item = plugin.getItemDataManager().getItem(args2[1], null);
                         if (item != null) {

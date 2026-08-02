@@ -118,7 +118,7 @@ public class StatsCommand extends SubCommand implements Listener {
         }
         if (!hideList.contains(player.getUniqueId())) {
             for (int i = loreList.size() - 1; i >= 0; i--) {
-                if (Double.valueOf(SubAttribute.getNumber(loreList.get(i)).replace("-", "")) == 0D) {
+                if (Double.parseDouble(SubAttribute.getNumber(loreList.get(i)).replace("-", "")) == 0D) {
                     loreList.remove(i);
                 }
             }
@@ -139,7 +139,7 @@ public class StatsCommand extends SubCommand implements Listener {
         }
         if (!hideList.contains(player.getUniqueId())) {
             for (int i = loreList.size() - 1; i >= 0; i--) {
-                if (Double.valueOf(SubAttribute.getNumber(loreList.get(i)).replace("-", "")) == 0D) {
+                if (Double.parseDouble(SubAttribute.getNumber(loreList.get(i)).replace("-", "")) == 0D) {
                     loreList.remove(i);
                 }
             }
@@ -159,7 +159,7 @@ public class StatsCommand extends SubCommand implements Listener {
         }
         if (!hideList.contains(player.getUniqueId())) {
             for (int i = loreList.size() - 1; i >= 0; i--) {
-                if (Double.valueOf(SubAttribute.getNumber(loreList.get(i)).replace("-", "")) == 0D) {
+                if (Double.parseDouble(SubAttribute.getNumber(loreList.get(i)).replace("-", "")) == 0D) {
                     loreList.remove(i);
                 }
             }

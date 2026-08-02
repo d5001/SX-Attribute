@@ -17,7 +17,7 @@ public class SXDamageEvent extends Event {
     private static final HandlerList handlers = new HandlerList();
 
     @Getter
-    private DamageEventData data;
+    private final DamageEventData data;
 
     public SXDamageEvent(DamageEventData data) {
         this.data = data;

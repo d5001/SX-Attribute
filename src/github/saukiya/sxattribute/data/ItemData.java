@@ -53,12 +53,12 @@ class ItemData {
         String id = plugin.getRandomStringManager().processRandomString(name, this.getIds().get(SXAttribute.getRandom().nextInt(this.getIds().size())), lockRandomMap);
         int itemMaterial = 260, itemDurability = 0;
         if (id != null) {
-            if (id.contains(":")) {
-                String[] idSplit = id.split(":");
-                itemMaterial = Integer.valueOf(idSplit[0]);
-                itemDurability = Integer.valueOf(idSplit[1]);
-            } else {
-                itemMaterial = Integer.valueOf(id);
+            String[] split = id.split(":");
+            if (split.length == 1) {
+                itemMaterial = Integer.parseInt(id);
+            } else if (split.length > 1) {
+                itemMaterial = Integer.parseInt(split[0]);
+                itemDurability = Integer.parseInt(split[1]);
             }
         }
         item.setTypeId(itemMaterial);
@@ -83,7 +83,6 @@ class ItemData {
                         if (!SubCondition.getUnbreakable(meta)) {
                             Repairable repairable = (Repairable) meta;
                             repairable.setRepairCost(999);
-                            meta = (ItemMeta) repairable;
                             int durability = SubCondition.getDurability(lore);
                             int maxDurability = SubCondition.getMaxDurability(lore);
                             int maxDefaultDurability = item.getType().getMaxDurability();
@@ -110,7 +109,7 @@ class ItemData {
             meta.setLore(loreList);
             item.setItemMeta(meta);
         }
-        if (this.getEnchantList() != null && this.getEnchantList().size() > 0) {
+        if (this.getEnchantList() != null && !this.getEnchantList().isEmpty()) {
             List<String> enchantList = new ArrayList<>();
             for (String enchantName : this.getEnchantList()) {
                 enchantName = plugin.getRandomStringManager().processRandomString(name, enchantName, lockRandomMap);
@@ -121,22 +120,23 @@ class ItemData {
                 }
             }
             for (String enchantName : enchantList) {
-                if (enchantName.contains(":") && enchantName.split(":").length > 1) {
-                    Enchantment enchant = Enchantment.getByName(enchantName.split(":")[0]);
-                    int level = Integer.valueOf(enchantName.split(":")[1].replaceAll("[^0-9]", ""));
+                String[] split = enchantName.split(":");
+                if (split.length > 1) {
+                    Enchantment enchant = Enchantment.getByName(split[0]);
+                    int level = Integer.parseInt(split[1].replaceAll("[^0-9]", ""));
                     if (enchant != null) {
                         if (level > 0) {
                             meta.addEnchant(enchant, level, true);
                         }
                     } else {
-                        Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "§c物品: §4" + name + " §c的附魔: §4" + enchantName.split(":")[0] + "§c 不是正常的附魔名称！");
+                        Bukkit.getConsoleSender().sendMessage(Message.getMessagePrefix() + "§c物品: §4" + name + " §c的附魔: §4" + split[0] + "§c 不是正常的附魔名称！");
                     }
                 }
             }
         }
         item.setItemMeta(meta);
         // 存储lockRandomMap
-        if (lockRandomMap.size() > 0) {
+        if (!lockRandomMap.isEmpty()) {
             List<String> list = new ArrayList<>();
             lockRandomMap.forEach((key, value) -> list.add(key + "§e§l§k|§e§r" + value));
             plugin.getItemUtil().setNBTList(item, "LockRandomMap", list);

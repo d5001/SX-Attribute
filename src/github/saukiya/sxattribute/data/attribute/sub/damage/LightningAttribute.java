@@ -54,7 +54,7 @@ public class LightningAttribute extends SubAttribute {
     @Override
     public boolean loadAttribute(String lore) {
         if (lore.contains(Config.getConfig().getString(Config.NAME_LIGHTNING))) {
-            getAttributes()[0] += Double.valueOf(getNumber(lore));
+            getAttributes()[0] += Double.parseDouble(getNumber(lore));
             return true;
         }
         return false;

@@ -70,11 +70,11 @@ public class CritAttribute extends SubAttribute {
     @Override
     public boolean loadAttribute(String lore) {
         if (lore.contains(Config.getConfig().getString(Config.NAME_CRIT_RATE))) {
-            getAttributes()[0] += Double.valueOf(getNumber(lore));
+            getAttributes()[0] += Double.parseDouble(getNumber(lore));
             return true;
         }
         if (lore.contains(Config.getConfig().getString(Config.NAME_CRIT))) {
-            getAttributes()[1] += Double.valueOf(getNumber(lore));
+            getAttributes()[1] += Double.parseDouble(getNumber(lore));
             return true;
         }
         return false;

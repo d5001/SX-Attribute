@@ -38,9 +38,9 @@ public class HealthRegenAttribute extends SubAttribute {
                 try {
                     for (Player player : new ArrayList<>(Bukkit.getOnlinePlayers())) {
                         if (player != null && !player.isDead() && player.isOnline()) {
-                            Double maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+                            double maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
                             if (player.getHealth() < maxHealth) {
-                                Double healthRegen = SXAttribute.getApi().getEntityAllData(player).getSubAttribute("HealthRegen").getAttributes()[0];
+                                double healthRegen = SXAttribute.getApi().getEntityAllData(player).getSubAttribute("HealthRegen").getAttributes()[0];
                                 if (healthRegen > 0) {
                                     EntityRegainHealthEvent event = new EntityRegainHealthEvent(player, healthRegen, EntityRegainHealthEvent.RegainReason.CUSTOM);
                                     Bukkit.getPluginManager().callEvent(event);
@@ -81,7 +81,7 @@ public class HealthRegenAttribute extends SubAttribute {
     @Override
     public boolean loadAttribute(String lore) {
         if (lore.contains(Config.getConfig().getString(Config.NAME_HEALTH_REGEN))) {
-            getAttributes()[0] += Double.valueOf(getNumber(lore));
+            getAttributes()[0] += Double.parseDouble(getNumber(lore));
             return true;
         }
         return false;

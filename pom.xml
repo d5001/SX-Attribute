@@ -19,12 +19,10 @@
     </properties>
 
     <repositories>
-        <!-- Spigot -->
         <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
-        <!-- JetBrains Annotations -->
         <repository>
             <id>jetbrains</id>
             <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
@@ -32,7 +30,6 @@
     </repositories>
 
     <dependencies>
-        <!-- Spigot API -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
@@ -41,16 +38,13 @@
             <systemPath>${project.basedir}/lib/spigot-1.12.2.jar</systemPath>
         </dependency>
 
-        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.24</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/lombok.jar</systemPath>
+            <version>1.18.34</version>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- Vault API -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -59,7 +53,6 @@
             <systemPath>${project.basedir}/lib/Vault.jar</systemPath>
         </dependency>
 
-        <!-- PlaceholderAPI -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
@@ -68,7 +61,6 @@
             <systemPath>${project.basedir}/lib/PlaceholderAPI-2.8.2.jar</systemPath>
         </dependency>
 
-        <!-- HolographicDisplays API -->
         <dependency>
             <groupId>com.gmail.filoghost.holographicdisplays</groupId>
             <artifactId>holographicdisplays-api</artifactId>
@@ -77,16 +69,14 @@
             <systemPath>${project.basedir}/lib/HolographicDisplays.jar</systemPath>
         </dependency>
 
-        <!-- MythicMobs API -->
         <dependency>
             <groupId>io.lumine.mythic</groupId>
             <artifactId>MythicMobs</artifactId>
-            <version>4.3.2</version>
+            <version>4.11</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MythicMobs-4.3.2-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/lib/Mythicmobs-4.11.jar</systemPath>
         </dependency>
 
-        <!-- SkillAPI -->
         <dependency>
             <groupId>com.sucry</groupId>
             <artifactId>SkillAPI</artifactId>
@@ -95,7 +85,6 @@
             <systemPath>${project.basedir}/lib/SkillAPI-3.108.jar</systemPath>
         </dependency>
 
-        <!-- RPGInventory -->
         <dependency>
             <groupId>live.shells</groupId>
             <artifactId>RPGInventory</artifactId>
@@ -104,7 +93,6 @@
             <systemPath>${project.basedir}/lib/RPGInventory-2.1.7.jar</systemPath>
         </dependency>
 
-        <!-- SX-Level -->
         <dependency>
             <groupId>github.saukiya</groupId>
             <artifactId>SX-Level</artifactId>
@@ -113,7 +101,6 @@
             <systemPath>${project.basedir}/lib/SX-Level-1.1.8.jar</systemPath>
         </dependency>
 
-        <!-- Apache Commons Lang3 (used by bStats Metrics) -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -121,17 +108,23 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JetBrains Annotations -->
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>16.0.2</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>nms-all</groupId>
+            <artifactId>nms-all</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/lib/nms-all-1.0.0.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>
-        <!-- 使用项目原有的 src 目录 -->
         <sourceDirectory>src</sourceDirectory>
         <resources>
             <resource>
@@ -141,7 +134,6 @@
         </resources>
 
         <plugins>
-            <!-- Java 编译器插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -150,34 +142,22 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-
-            <!-- Lombok 注解处理器 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.24</version>
+                            <version>1.18.34</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
-            <!-- JAR 打包插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <finalName>SX-Attribute-${project.version}</finalName>
+                    <finalName>SX-Attribute-${project.version}-Modified</finalName>
                 </configuration>
             </plugin>
         </plugins>

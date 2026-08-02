@@ -5,6 +5,8 @@ import github.saukiya.sxattribute.util.Config;
 import github.saukiya.sxattribute.util.Message;
 import github.saukiya.sxlevel.SXLevel;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -14,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * 条件抽象类
@@ -57,7 +60,14 @@ public abstract class SubCondition {
      * @return String
      */
     public static String getItemName(ItemStack item) {
-        return item == null ? "N/A" : item.getItemMeta().hasDisplayName() ? item.getItemMeta().getDisplayName() : item.getType().name();
+        if (item == null || item.getType() == Material.AIR) return "N/A";
+        if (item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            if (meta.hasDisplayName()) {
+                return meta.getDisplayName();
+            }
+        }
+        return item.getType().name();
     }
 
     /**
@@ -67,8 +77,20 @@ public abstract class SubCondition {
      * @return int 没有则为-1
      */
     public static int getItemLevel(ItemStack item) {
-        if (item != null && item.hasItemMeta() && item.getItemMeta().hasLore()) {
-            return item.getItemMeta().getLore().stream().filter(lore -> lore.contains(Config.getConfig().getString(Config.NAME_LIMIT_LEVEL))).findFirst().map(lore -> Integer.valueOf(getNumber(lore).replace(".", ""))).orElse(-1);
+        if (item == null || item.getType() == Material.AIR) return -1;
+        if (item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            if (meta.hasLore()) {
+                List<String> loreList = meta.getLore();
+                String target = Config.getConfig().getString(Config.NAME_LIMIT_LEVEL);
+                for (String lore : loreList) {
+                    if (lore.contains(target)) {
+                        try {
+                            return Integer.parseInt(getNumber(lore).replace(".", ""));
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
         }
         return -1;
     }
@@ -83,6 +105,9 @@ public abstract class SubCondition {
         return entity instanceof Player ? SXAttribute.isSxLevel() ? SXLevel.getApi().getPlayerData((Player) entity).getLevel() : ((Player) entity).getLevel() : 10000;
     }
 
+
+    private static final Pattern CLEAN_PATTERN = Pattern.compile("§+[a-z0-9]|[^-0-9.]");
+
     /**
      * 获取属性值
      *
@@ -90,9 +115,17 @@ public abstract class SubCondition {
      * @return String
      */
     public static String getNumber(String lore) {
-        String str = lore.replaceAll("§+[a-z0-9]", "").replaceAll("[^-0-9.]", "");
-        return str.length() == 0 ? "0" : str;
+        if (lore == null || lore.isEmpty()) {
+            return "0";
+        }
+
+        String str = CLEAN_PATTERN.matcher(lore).replaceAll("");
+        return str.isEmpty() ? "0" : str;
     }
+    /*public static String getNumber(String lore) {
+        String str = lore.replaceAll("§+[a-z0-9]", "").replaceAll("[^-0-9.]", "");
+        return str.isEmpty() ? "0" : str;
+    }*/
 
 
     /**
@@ -102,8 +135,11 @@ public abstract class SubCondition {
      * @return int
      */
     public static int getDurability(String lore) {
-        return lore.contains("/") && lore.split("/").length > 1 ? Integer.valueOf(lore.replaceAll("§+[0-9]", "").split("/")[0].replaceAll("[^0-9]", "")) : 0;
+        return getDurabilityValue(lore, 0);
     }
+    /*public static int getDurability(String lore) {
+        return lore.contains("/") && lore.split("/").length > 1 ? Integer.valueOf(lore.replaceAll("§+[0-9]", "").split("/")[0].replaceAll("[^0-9]", "")) : 0;
+    }*/
 
     /**
      * 获取最大耐久值
@@ -112,7 +148,36 @@ public abstract class SubCondition {
      * @return int
      */
     public static int getMaxDurability(String lore) {
+        return getDurabilityValue(lore, 1);
+    }
+    /*public static int getMaxDurability(String lore) {
         return lore.contains("/") && lore.split("/").length > 1 ? Integer.valueOf(lore.replaceAll("§+[0-9]", "").split("/")[1].replaceAll("[^0-9]", "")) : 0;
+    }*/
+
+    private static final Pattern NON_DIGIT = Pattern.compile("[^0-9]");
+
+    /**
+     * 获取耐久值（当前/最大）
+     * @param lore 耐久字符串，格式如 "§a50/100" 或 "50/100"
+     * @param index 0=当前耐久，1=最大耐久
+     * @return 耐久值，无效时返回0
+     */
+    private static int getDurabilityValue(String lore, int index) {
+        if (lore == null || !lore.contains("/")) {
+            return 0;
+        }
+
+        // 使用预编译正则移除颜色代码
+        String cleaned = ChatColor.stripColor(lore);
+        String[] parts = cleaned.split("/");
+
+        if (parts.length <= index) {
+            return 0;
+        }
+
+        // 使用预编译正则提取数字
+        String value = NON_DIGIT.matcher(parts[index]).replaceAll("");
+        return value.isEmpty() ? 0 : Integer.parseInt(value);
     }
 
     /**
@@ -161,8 +226,30 @@ public abstract class SubCondition {
      * @return boolean
      */
     public final boolean containsType(SXConditionType type, boolean strContains) {
-        return type != null && Arrays.stream(this.updateTypes).anyMatch(updateType -> updateType.equals(SXConditionType.ALL) || (strContains ? type.getName().contains(updateType.getName()) : updateType.equals(type)));
+        if (type == null) {
+            return false;
+        }
+
+        for (SXConditionType updateType : updateTypes) {
+            if (updateType == SXConditionType.ALL) {
+                return true;
+            }
+
+            if (strContains) {
+                if (type.getName().contains(updateType.getName())) {
+                    return true;
+                }
+            } else {
+                if (updateType.equals(type)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
+    /*public final boolean containsType(SXConditionType type, boolean strContains) {
+        return type != null && Arrays.stream(this.updateTypes).anyMatch(updateType -> updateType.equals(SXConditionType.ALL) || (strContains ? type.getName().contains(updateType.getName()) : updateType.equals(type)));
+    }*/
 
     /**
      * 注册条件方法

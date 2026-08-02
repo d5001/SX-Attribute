@@ -91,14 +91,14 @@ public class DefenseAttribute extends SubAttribute {
     public boolean loadAttribute(String lore) {
         String[] loreSplit = lore.split("-");
         if (lore.contains(Config.getConfig().getString(Config.NAME_PVE_DEFENSE))) {
-            this.getAttributes()[4] += Double.valueOf(getNumber(loreSplit[0]));
-            this.getAttributes()[5] += Double.valueOf(getNumber(loreSplit.length > 1 ? loreSplit[1] : loreSplit[0]));
+            this.getAttributes()[4] += Double.parseDouble(getNumber(loreSplit[0]));
+            this.getAttributes()[5] += Double.parseDouble(getNumber(loreSplit.length > 1 ? loreSplit[1] : loreSplit[0]));
         } else if (lore.contains(Config.getConfig().getString(Config.NAME_PVP_DEFENSE))) {
-            this.getAttributes()[2] += Double.valueOf(getNumber(loreSplit[0]));
-            this.getAttributes()[3] += Double.valueOf(getNumber(loreSplit.length > 1 ? loreSplit[1] : loreSplit[0]));
+            this.getAttributes()[2] += Double.parseDouble(getNumber(loreSplit[0]));
+            this.getAttributes()[3] += Double.parseDouble(getNumber(loreSplit.length > 1 ? loreSplit[1] : loreSplit[0]));
         } else if (lore.contains(Config.getConfig().getString(Config.NAME_DEFENSE))) {
-            this.getAttributes()[0] += Double.valueOf(getNumber(loreSplit[0]));
-            this.getAttributes()[1] += Double.valueOf(getNumber(loreSplit.length > 1 ? loreSplit[1] : loreSplit[0]));
+            this.getAttributes()[0] += Double.parseDouble(getNumber(loreSplit[0]));
+            this.getAttributes()[1] += Double.parseDouble(getNumber(loreSplit.length > 1 ? loreSplit[1] : loreSplit[0]));
         } else {
             return false;
         }

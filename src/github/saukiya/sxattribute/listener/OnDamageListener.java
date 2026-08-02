@@ -120,9 +120,9 @@ public class OnDamageListener implements Listener {
         while (damagerIterator.hasNext() && entityIterator.hasNext()) {
             SubAttribute damageAttribute = damagerIterator.next();
             SubAttribute entityAttribute = entityIterator.next();
-            if (damageAttribute.containsType(SXAttributeType.DAMAGE) && Arrays.stream(damageAttribute.getAttributes()).anyMatch(d -> d != 0)) {
+            if (damageAttribute.containsType(SXAttributeType.DAMAGE) && damageAttribute.noZeroAttribute()) {
                 damageAttribute.eventMethod(damageEventData);
-            } else if (entityAttribute.containsType(SXAttributeType.DEFENCE) && Arrays.stream(entityAttribute.getAttributes()).anyMatch(d -> d != 0)) {
+            } else if (entityAttribute.containsType(SXAttributeType.DEFENCE) && entityAttribute.noZeroAttribute()) {
                 entityAttribute.eventMethod(damageEventData);
             }
             if (damageEventData.isCancelled() || damageEventData.getDamage() <= 0) {

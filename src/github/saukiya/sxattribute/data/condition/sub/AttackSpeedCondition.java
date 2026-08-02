@@ -22,7 +22,7 @@ public class AttackSpeedCondition extends SubCondition {
     @Override
     public SXConditionReturnType determine(LivingEntity entity, ItemStack item, String lore) {
         if (lore.contains(Config.getConfig().getString(Config.NAME_ATTACK_SPEED))) {
-            if (item != null) SXAttribute.getApi().getItemUtil().setAttackSpeed(item, Double.valueOf(getNumber(lore)));
+            if (item != null) SXAttribute.getApi().getItemUtil().setAttackSpeed(item, Double.parseDouble(getNumber(lore)));
         }
         return SXConditionReturnType.NULL;
     }

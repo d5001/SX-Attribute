@@ -28,10 +28,10 @@ public class RegisterSlot {
         if (id != null) {
             if (id.contains(":")) {
                 String[] idSplit = id.split(":");
-                itemMaterial = Integer.valueOf(idSplit[0]);
-                itemDurability = Integer.valueOf(idSplit[1]);
+                itemMaterial = Integer.parseInt(idSplit[0]);
+                itemDurability = Integer.parseInt(idSplit[1]);
             } else {
-                itemMaterial = Integer.valueOf(id);
+                itemMaterial = Integer.parseInt(id);
             }
         }
         this.item = itemUtil.setNBT(new ItemStack(itemMaterial, 1, (short) itemDurability), "Slot", this.name);

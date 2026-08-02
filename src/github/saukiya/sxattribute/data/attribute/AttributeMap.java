@@ -3,14 +3,14 @@ package github.saukiya.sxattribute.data.attribute;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * @author Saukiya
  */
 public class AttributeMap {
 
-    private Map<Integer, SubAttribute> map = new TreeMap<>();
+    private final Map<Integer, SubAttribute> map = new ConcurrentSkipListMap<>();
 
     public SubAttribute get(int i) {
         return map.get(i);

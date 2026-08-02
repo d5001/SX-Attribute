@@ -34,7 +34,7 @@ public class RegisterSlotManager {
                 if (str.contains("#") && str.split("#").length > 1) {
                     String[] args = str.split("#");
                     String name = args[1];
-                    int slot = Integer.valueOf(args[0].replaceAll("[^0-9]", ""));
+                    int slot = Integer.parseInt(args[0].replaceAll("[^0-9]", ""));
                     String id = args.length > 2 ? args[2] : null;
                     registerSlotMap.put(slot, new RegisterSlot(slot, name, id, plugin.getItemUtil()));
                 }
