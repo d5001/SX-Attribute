@@ -97,7 +97,7 @@ public class MythicmobsDropAttribute extends SubAttribute {
                 super(line, config);
                 valid = true;
                 int index = line.indexOf(" ");
-                name = index == -1 ? line : line.substring(index + 1);
+                name = index == -1 ? line : line.substring(0, index);
             }
 
             public SXDrop(MythicLineConfig config) {
